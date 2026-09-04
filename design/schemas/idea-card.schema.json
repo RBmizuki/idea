@@ -1,0 +1,524 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://demand-foundry.local/schemas/idea-card.schema.json",
+  "title": "Demand Foundry Idea Card",
+  "description": "Hard Gate、評価、検証、監査に必要な最小構造。FACTを含む場合はevidence_idsを要求する。",
+  "type": "object",
+  "required": [
+    "idea_id",
+    "title",
+    "one_liner",
+    "origin",
+    "change",
+    "problem",
+    "why_now",
+    "customer",
+    "trigger_event",
+    "current_workflow",
+    "current_alternative",
+    "current_cost",
+    "cost_of_inaction",
+    "solution",
+    "value_proposition",
+    "before_after",
+    "unique_mechanism",
+    "business_model",
+    "market",
+    "go_to_market",
+    "technology",
+    "competition",
+    "risk",
+    "validation",
+    "mvp",
+    "economics",
+    "classification",
+    "scores",
+    "decision",
+    "run_id",
+    "prompt_version",
+    "rubric_version",
+    "model",
+    "model_version",
+    "generation_parameters",
+    "generated_at"
+  ],
+  "properties": {
+    "idea_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$"
+    },
+    "title": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 160
+    },
+    "one_liner": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 500
+    },
+    "origin": {
+      "type": "object",
+      "required": [
+        "signal_ids",
+        "problem_ids",
+        "evidence_ids",
+        "generation_method"
+      ],
+      "properties": {
+        "signal_ids": {
+          "$ref": "#/$defs/idArray"
+        },
+        "problem_ids": {
+          "$ref": "#/$defs/idArray"
+        },
+        "evidence_ids": {
+          "$ref": "#/$defs/idArray"
+        },
+        "generation_method": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "additionalProperties": true
+    },
+    "change": {
+      "type": [
+        "string",
+        "object"
+      ]
+    },
+    "problem": {
+      "type": [
+        "string",
+        "object"
+      ]
+    },
+    "why_now": {
+      "type": [
+        "string",
+        "object"
+      ]
+    },
+    "customer": {
+      "type": "object",
+      "required": [
+        "user",
+        "problem_owner",
+        "payer",
+        "decision_maker",
+        "champion",
+        "blocker",
+        "data_owner",
+        "beneficiary"
+      ],
+      "properties": {
+        "user": {
+          "$ref": "#/$defs/nonBlankOrUnknown"
+        },
+        "problem_owner": {
+          "$ref": "#/$defs/nonBlankOrUnknown"
+        },
+        "payer": {
+          "$ref": "#/$defs/nonBlankOrUnknown"
+        },
+        "decision_maker": {
+          "$ref": "#/$defs/nonBlankOrUnknown"
+        },
+        "champion": {
+          "$ref": "#/$defs/nonBlankOrUnknown"
+        },
+        "blocker": {
+          "$ref": "#/$defs/nonBlankOrUnknown"
+        },
+        "data_owner": {
+          "$ref": "#/$defs/nonBlankOrUnknown"
+        },
+        "beneficiary": {
+          "$ref": "#/$defs/nonBlankOrUnknown"
+        }
+      },
+      "additionalProperties": true
+    },
+    "trigger_event": {
+      "type": [
+        "string",
+        "object"
+      ]
+    },
+    "current_workflow": {
+      "type": [
+        "string",
+        "object",
+        "array"
+      ]
+    },
+    "current_alternative": {
+      "oneOf": [
+        {
+          "type": "string",
+          "minLength": 1
+        },
+        {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": [
+              "string",
+              "object"
+            ]
+          }
+        }
+      ]
+    },
+    "current_cost": {
+      "type": [
+        "string",
+        "number",
+        "object"
+      ]
+    },
+    "cost_of_inaction": {
+      "type": [
+        "string",
+        "number",
+        "object"
+      ]
+    },
+    "solution": {
+      "type": [
+        "string",
+        "object"
+      ]
+    },
+    "value_proposition": {
+      "type": [
+        "string",
+        "object"
+      ]
+    },
+    "before_after": {
+      "type": "object",
+      "required": [
+        "before",
+        "after"
+      ],
+      "additionalProperties": true
+    },
+    "unique_mechanism": {
+      "type": [
+        "string",
+        "object"
+      ]
+    },
+    "business_model": {
+      "type": "object",
+      "required": [
+        "pricing_unit",
+        "price",
+        "contract_period",
+        "revenue_model",
+        "gross_margin_assumption",
+        "expansion_revenue"
+      ],
+      "additionalProperties": true
+    },
+    "market": {
+      "type": "object",
+      "required": [
+        "initial_wedge",
+        "target_customer_count",
+        "bottom_up_tam",
+        "bottom_up_sam",
+        "bottom_up_som",
+        "calculation"
+      ],
+      "additionalProperties": true
+    },
+    "go_to_market": {
+      "type": "object",
+      "required": [
+        "first_100_customers",
+        "sales_channel",
+        "sales_cycle",
+        "acquisition_cost_assumption"
+      ],
+      "additionalProperties": true
+    },
+    "technology": {
+      "type": "object",
+      "required": [
+        "required_data",
+        "data_access",
+        "core_algorithm",
+        "integration",
+        "implementation_difficulty"
+      ],
+      "additionalProperties": true
+    },
+    "competition": {
+      "type": "object",
+      "required": [
+        "direct_competitors",
+        "indirect_alternatives",
+        "do_nothing_option",
+        "differentiation",
+        "defensibility"
+      ],
+      "additionalProperties": true
+    },
+    "risk": {
+      "type": "object",
+      "required": [
+        "regulatory",
+        "legal",
+        "privacy",
+        "operational",
+        "technical",
+        "adoption",
+        "liability"
+      ],
+      "additionalProperties": true
+    },
+    "validation": {
+      "type": "object",
+      "required": [
+        "biggest_uncertainty",
+        "experiment",
+        "target",
+        "duration",
+        "cost",
+        "success_metric",
+        "hold_metric",
+        "kill_metric"
+      ],
+      "additionalProperties": true
+    },
+    "mvp": {
+      "type": "object",
+      "required": [
+        "scope",
+        "manual_operations",
+        "excluded_features",
+        "build_duration",
+        "acceptance_criteria"
+      ],
+      "additionalProperties": true
+    },
+    "economics": {
+      "type": "object",
+      "required": [
+        "revenue_10_customers",
+        "revenue_100_customers",
+        "revenue_1000_customers",
+        "cost_structure",
+        "break_even_assumption"
+      ],
+      "additionalProperties": true
+    },
+    "classification": {
+      "type": "object",
+      "required": [
+        "facts",
+        "estimates",
+        "assumptions",
+        "hypotheses",
+        "unknowns"
+      ],
+      "properties": {
+        "facts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/classifiedEntry"
+          }
+        },
+        "estimates": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/classifiedEntry"
+          }
+        },
+        "assumptions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/classifiedEntry"
+          }
+        },
+        "hypotheses": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/classifiedEntry"
+          }
+        },
+        "unknowns": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/classifiedEntry"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "scores": {
+      "type": "object",
+      "required": [
+        "hard_gate",
+        "individual_scores",
+        "referee_scores",
+        "pairwise_results",
+        "penalties",
+        "final_score"
+      ],
+      "additionalProperties": true
+    },
+    "decision": {
+      "type": "object",
+      "required": [
+        "status",
+        "reason",
+        "next_action",
+        "evidence_required"
+      ],
+      "additionalProperties": true
+    },
+    "novelty": {
+      "type": "object",
+      "properties": {
+        "cluster_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "similar_idea_ids": {
+          "$ref": "#/$defs/idArray"
+        }
+      },
+      "additionalProperties": true
+    },
+    "run_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "parent_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "agent_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "prompt_version": {
+      "type": "string",
+      "minLength": 1
+    },
+    "rubric_version": {
+      "type": "string",
+      "minLength": 1
+    },
+    "model": {
+      "type": "string",
+      "minLength": 1
+    },
+    "model_version": {
+      "type": "string",
+      "minLength": 1
+    },
+    "generation_parameters": {
+      "type": "object"
+    },
+    "random_seed": {
+      "type": [
+        "integer",
+        "null"
+      ]
+    },
+    "input_hash": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "source_snapshot": {
+      "type": [
+        "string",
+        "object",
+        "array",
+        "null"
+      ]
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "token_usage": {
+      "type": [
+        "object",
+        "integer",
+        "null"
+      ]
+    },
+    "estimated_cost": {
+      "type": [
+        "object",
+        "number",
+        "null"
+      ]
+    }
+  },
+  "$defs": {
+    "idArray": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "nonBlankOrUnknown": {
+      "type": "string",
+      "minLength": 1
+    },
+    "classifiedEntry": {
+      "oneOf": [
+        {
+          "type": "string",
+          "minLength": 1
+        },
+        {
+          "type": "object",
+          "required": [
+            "text"
+          ],
+          "properties": {
+            "text": {
+              "type": "string",
+              "minLength": 1
+            },
+            "evidence_ids": {
+              "$ref": "#/$defs/idArray"
+            },
+            "formula": {
+              "type": [
+                "string",
+                "object"
+              ]
+            },
+            "owner": {
+              "type": "string"
+            },
+            "review_due_at": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": true
+        }
+      ]
+    }
+  },
+  "additionalProperties": true
+}

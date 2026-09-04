@@ -1,0 +1,27 @@
+{
+  "run_id": "run-2026-09-04-01",
+  "simulation": true,
+  "currency": "USD",
+  "budget_limit": 60.0,
+  "estimated_total": 38.42,
+  "actual_billed_cost": null,
+  "note": "This is a design fixture, not a provider invoice. Values demonstrate the cost ledger shape only.",
+  "by_stage": {
+    "brief_compiler": 1.2,
+    "signal_scout": 5.4,
+    "evidence_verifier": 7.9,
+    "problem_and_opportunity": 4.5,
+    "idea_generation_20": 7.8,
+    "business_model_and_novelty": 3.6,
+    "hard_gate": 1.5,
+    "independent_evaluation": 3.0,
+    "red_team": 2.0,
+    "validation_design": 1.52
+  },
+  "controls": {
+    "warning_at_pct": 90,
+    "hard_stop_before_exceeding": true,
+    "max_retries_per_call": 2,
+    "low_value_early_stop": true
+  }
+}

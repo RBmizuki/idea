@@ -1,0 +1,27 @@
+{
+  "run_id": "run-2026-09-04-01",
+  "queries": [
+    {
+      "q": "site:mlit.go.jp 空家等対策 改正 管理不全空家 施行",
+      "intent": "evidence"
+    },
+    {
+      "q": "site:stat.go.jp 令和5年 住宅土地統計 空き家 900万2千戸",
+      "intent": "evidence"
+    },
+    {
+      "q": "空き家等実態調査 業務委託 仕様書 現地調査 データベース",
+      "intent": "workflow"
+    },
+    {
+      "q": "site:mlit.go.jp Project LINKS 空き家 行政情報 水道 PLATEAU",
+      "intent": "competition_data"
+    },
+    {
+      "q": "空き家 所有者 実態調査 管理 作業 大変 費用",
+      "intent": "owner_problem"
+    }
+  ],
+  "generated_at": "2026-09-04T10:00:00Z",
+  "simulation": true
+}

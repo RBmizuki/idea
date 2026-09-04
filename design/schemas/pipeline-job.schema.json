@@ -1,0 +1,102 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://demand-foundry.local/schemas/pipeline-job.schema.json",
+  "title": "Demand Foundry Pipeline Job",
+  "type": "object",
+  "required": [
+    "id",
+    "run_id",
+    "stage_key",
+    "handler_version",
+    "input_hash",
+    "idempotency_key",
+    "status",
+    "attempt",
+    "max_attempts",
+    "available_at",
+    "estimated_max_cost"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "run_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "stage_key": {
+      "type": "string",
+      "minLength": 1
+    },
+    "entity_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "handler_version": {
+      "type": "string",
+      "minLength": 1
+    },
+    "input_hash": {
+      "type": "string",
+      "minLength": 1
+    },
+    "idempotency_key": {
+      "type": "string",
+      "minLength": 1
+    },
+    "status": {
+      "enum": [
+        "queued",
+        "running",
+        "succeeded",
+        "failed",
+        "dead",
+        "cancelled"
+      ]
+    },
+    "attempt": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "max_attempts": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 10
+    },
+    "priority": {
+      "type": "integer",
+      "default": 0
+    },
+    "available_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "locked_by": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "locked_until": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time"
+    },
+    "last_error_code": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "estimated_max_cost": {
+      "type": "number",
+      "minimum": 0
+    }
+  },
+  "additionalProperties": false
+}

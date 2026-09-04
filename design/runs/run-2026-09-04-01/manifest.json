@@ -1,0 +1,109 @@
+{
+  "run_id": "run-2026-09-04-01",
+  "design_version": "design-v1.0.0",
+  "generated_at": "2026-09-04T09:58:42Z",
+  "files": [
+    {
+      "path": "FINAL.md",
+      "sha256": "b37d9fec3178ac1f988a7f7d67816b7df25989f5510f0135f306ebfcbf31edbc",
+      "bytes": 5034,
+      "records": null
+    },
+    {
+      "path": "STATE.md",
+      "sha256": "5aa182ca24a413cedf22a69c67f0812b75de02149a8017cf5973a7c737379767",
+      "bytes": 1335,
+      "records": null
+    },
+    {
+      "path": "brief.snapshot.yaml",
+      "sha256": "e87987a3e8e848fa9d672aa3411f765b2a520b53fdf883fe2955e219a89e4ec8",
+      "bytes": 1560,
+      "records": null
+    },
+    {
+      "path": "costs.json",
+      "sha256": "a38f965ae48f33cb11341c7ce9f07c41eb009cd19305a89d8ae8cdaa24a60027",
+      "bytes": 739,
+      "records": null
+    },
+    {
+      "path": "decisions.jsonl",
+      "sha256": "2c6f5f7843e781cbf4722673d737676aeb1d31ca0c61d1ff6cbf7b745310ce65",
+      "bytes": 4136,
+      "records": 5
+    },
+    {
+      "path": "evaluations.jsonl",
+      "sha256": "683c8b13d6ac2799cd1777f1e735de7ce4792cd038f9920016f23b9a02fc31a5",
+      "bytes": 64334,
+      "records": 45
+    },
+    {
+      "path": "evidence.jsonl",
+      "sha256": "361c0402bc54c354dcdff5892fa4081fdd60ce8cdd0278293ddbe1357c6801ee",
+      "bytes": 12071,
+      "records": 10
+    },
+    {
+      "path": "ideas.jsonl",
+      "sha256": "58c195dbe36a0d2eca7f59a84565e1623e09ff004217fd7290ee080ef97db7d4",
+      "bytes": 146493,
+      "records": 20
+    },
+    {
+      "path": "model-calls.jsonl",
+      "sha256": "2c962ef7c02d5a3ed79772fa54c64acd446d752f377decd761e7e8cf6b6267b0",
+      "bytes": 30727,
+      "records": 61
+    },
+    {
+      "path": "opportunities.jsonl",
+      "sha256": "1bcc43fee19a07ba845b93aefcd09e9011a005c485d2e21106aba83ea08fda42",
+      "bytes": 4839,
+      "records": 3
+    },
+    {
+      "path": "problems.jsonl",
+      "sha256": "c56dd14b6ad3042d64609687120bbdd6246983af0ee27626630fb9c98bc3db31",
+      "bytes": 5417,
+      "records": 3
+    },
+    {
+      "path": "red-team.jsonl",
+      "sha256": "9064c23774ac0ce1aee4a4c699d54c10cbe56ea456cfe0c93450e913d8cbf54a",
+      "bytes": 6103,
+      "records": 7
+    },
+    {
+      "path": "rubric.snapshot.yaml",
+      "sha256": "b72f491d5cba5667405f0a091c6d5a666ddc29324961f0ef8894ce4ecbe37826",
+      "bytes": 487,
+      "records": null
+    },
+    {
+      "path": "search_queries.json",
+      "sha256": "4f3dd8164b820ab93659a3c183a52b075d21220fe8da91036125db1fd85aca1a",
+      "bytes": 746,
+      "records": null
+    },
+    {
+      "path": "signals.jsonl",
+      "sha256": "90067ffe56961f021a3a0ea9bfeb4c1b1b62146178f89401c85d5c67972e13eb",
+      "bytes": 3386,
+      "records": 4
+    },
+    {
+      "path": "sources.jsonl",
+      "sha256": "9caff0a550dffc75c26a40dca6e268613edaf247788fc89451789112c57fde0e",
+      "bytes": 5516,
+      "records": 5
+    },
+    {
+      "path": "validation-plans.jsonl",
+      "sha256": "08e7acbc0cc6bd95152caddfec86ad9d7331f59369cf404fe0f7be79dee63e3d",
+      "bytes": 5641,
+      "records": 3
+    }
+  ]
+}

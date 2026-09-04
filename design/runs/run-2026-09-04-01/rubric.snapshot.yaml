@@ -1,0 +1,21 @@
+version: rubric-1.0.0
+hard_gate_policy: hg-1.0.0
+criteria:
+  demand_evidence: 20
+  payer_and_budget: 15
+  economic_value: 15
+  customer_reachability: 10
+  feasibility: 10
+  validation_speed: 10
+  recurring_margin: 8
+  expansion: 5
+  defensibility: 4
+  strategic_fit: 3
+aggregation:
+  method: median_minus_mad_and_uncertainty
+  pairwise_adjustment_max: 5
+  fatal_red_team_veto: true
+portfolio:
+  max_selected_for_validation: 3
+  max_per_novelty_cluster: 1
+  validation_budget_jpy: 300000

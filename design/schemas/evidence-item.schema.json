@@ -1,0 +1,244 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://demand-foundry.local/schemas/evidence-item.schema.json",
+  "title": "Demand Foundry Evidence Item",
+  "type": "object",
+  "required": [
+    "evidence_id",
+    "source_id",
+    "source_snapshot_id",
+    "source_title",
+    "source_type",
+    "publisher",
+    "retrieved_at",
+    "summary",
+    "locator",
+    "confidence",
+    "freshness",
+    "supports",
+    "refutes",
+    "classification",
+    "run_id",
+    "prompt_version",
+    "rubric_version",
+    "model",
+    "model_version",
+    "generation_parameters",
+    "generated_at"
+  ],
+  "properties": {
+    "evidence_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "source_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "source_snapshot_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "source_title": {
+      "type": "string",
+      "minLength": 1
+    },
+    "source_type": {
+      "type": "string",
+      "minLength": 1
+    },
+    "publisher": {
+      "type": "string",
+      "minLength": 1
+    },
+    "url": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "uri"
+    },
+    "document_identifier": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "published_at": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "retrieved_at": {
+      "type": "string",
+      "format": "date"
+    },
+    "region": {
+      "type": [
+        "string",
+        "array",
+        "null"
+      ]
+    },
+    "industry": {
+      "type": [
+        "string",
+        "array",
+        "null"
+      ]
+    },
+    "summary": {
+      "type": "string",
+      "minLength": 1
+    },
+    "locator": {
+      "type": "object",
+      "minProperties": 1
+    },
+    "quote_hash": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "confidence": {
+      "enum": [
+        "high",
+        "low",
+        "medium",
+        "medium_high",
+        "unknown"
+      ]
+    },
+    "freshness": {
+      "type": [
+        "string",
+        "number",
+        "object"
+      ]
+    },
+    "supports": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "uniqueItems": true
+    },
+    "refutes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "uniqueItems": true
+    },
+    "classification": {
+      "enum": [
+        "FACT",
+        "ESTIMATE",
+        "ASSUMPTION",
+        "HYPOTHESIS",
+        "UNKNOWN"
+      ]
+    },
+    "run_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "parent_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "agent_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "prompt_version": {
+      "type": "string",
+      "minLength": 1
+    },
+    "rubric_version": {
+      "type": "string",
+      "minLength": 1
+    },
+    "model": {
+      "type": "string",
+      "minLength": 1
+    },
+    "model_version": {
+      "type": "string",
+      "minLength": 1
+    },
+    "generation_parameters": {
+      "type": "object"
+    },
+    "random_seed": {
+      "type": [
+        "integer",
+        "null"
+      ]
+    },
+    "input_hash": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "source_snapshot": {
+      "type": [
+        "string",
+        "object",
+        "array",
+        "null"
+      ]
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "token_usage": {
+      "type": [
+        "object",
+        "integer",
+        "null"
+      ]
+    },
+    "estimated_cost": {
+      "type": [
+        "object",
+        "number",
+        "null"
+      ]
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "classification": {
+            "const": "FACT"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "source_snapshot_id": {
+            "minLength": 1
+          },
+          "locator": {
+            "minProperties": 1
+          }
+        },
+        "required": [
+          "source_snapshot_id",
+          "locator"
+        ]
+      }
+    }
+  ],
+  "additionalProperties": true
+}

@@ -1,0 +1,228 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://demand-foundry.local/schemas/validation-plan.schema.json",
+  "title": "Demand Foundry Validation Plan",
+  "type": "object",
+  "required": [
+    "validation_id",
+    "idea_id",
+    "biggest_uncertainty",
+    "experiment",
+    "target",
+    "contact_method",
+    "interview_questions",
+    "sales_message",
+    "lp_or_demo",
+    "price_presentation",
+    "duration_days",
+    "cost_jpy",
+    "success_metric",
+    "hold_metric",
+    "kill_metric",
+    "next_if_success",
+    "approvals_required",
+    "run_id",
+    "prompt_version",
+    "rubric_version",
+    "model",
+    "model_version",
+    "generation_parameters",
+    "generated_at"
+  ],
+  "properties": {
+    "validation_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "idea_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "biggest_uncertainty": {
+      "type": "string",
+      "minLength": 1
+    },
+    "experiment": {
+      "type": "string",
+      "minLength": 1
+    },
+    "target": {
+      "type": "object",
+      "required": [
+        "segment",
+        "roles",
+        "sample_size"
+      ],
+      "properties": {
+        "segment": {
+          "type": "string",
+          "minLength": 1
+        },
+        "roles": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string"
+          }
+        },
+        "sample_size": {
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "additionalProperties": true
+    },
+    "contact_method": {
+      "type": "string",
+      "minLength": 1
+    },
+    "interview_questions": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string"
+      }
+    },
+    "sales_message": {
+      "type": "string",
+      "minLength": 1
+    },
+    "lp_or_demo": {
+      "type": [
+        "string",
+        "object"
+      ]
+    },
+    "price_presentation": {
+      "type": [
+        "object",
+        "string",
+        "number"
+      ]
+    },
+    "duration_days": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 30
+    },
+    "cost_jpy": {
+      "type": "number",
+      "minimum": 0
+    },
+    "success_metric": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": [
+          "string",
+          "object"
+        ]
+      }
+    },
+    "hold_metric": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": [
+          "string",
+          "object"
+        ]
+      }
+    },
+    "kill_metric": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": [
+          "string",
+          "object"
+        ]
+      }
+    },
+    "next_if_success": {
+      "type": "string",
+      "minLength": 1
+    },
+    "approvals_required": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "uniqueItems": true
+    },
+    "run_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "parent_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "agent_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "prompt_version": {
+      "type": "string",
+      "minLength": 1
+    },
+    "rubric_version": {
+      "type": "string",
+      "minLength": 1
+    },
+    "model": {
+      "type": "string",
+      "minLength": 1
+    },
+    "model_version": {
+      "type": "string",
+      "minLength": 1
+    },
+    "generation_parameters": {
+      "type": "object"
+    },
+    "random_seed": {
+      "type": [
+        "integer",
+        "null"
+      ]
+    },
+    "input_hash": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "source_snapshot": {
+      "type": [
+        "string",
+        "object",
+        "array",
+        "null"
+      ]
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "token_usage": {
+      "type": [
+        "object",
+        "integer",
+        "null"
+      ]
+    },
+    "estimated_cost": {
+      "type": [
+        "object",
+        "number",
+        "null"
+      ]
+    }
+  },
+  "additionalProperties": true
+}

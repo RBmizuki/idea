@@ -1,0 +1,53 @@
+run_id: run-2026-09-04-01
+name: "空き家再調査業務から、少人数で売れるB2B2G事業を探索"
+status: finalized
+region:
+  primary: JP
+  initial_locality: "中規模自治体と、その調査を受託する地域GIS・測量・建設コンサル会社"
+domains:
+  include:
+    - public_data
+    - local_government_dx
+    - housing
+    - geospatial
+    - field_survey
+  exclude:
+    - autonomous_legal_decisions
+    - direct_use_of_resident_personal_data_without_agreement
+    - insurance_underwriting
+objective:
+  primary: "30日以内に支払者・データ提供・有料試行の可能性を検証できる案を選ぶ"
+  secondary: "8〜12週間で1〜3人がMVPを構築できること"
+constraints:
+  team_size: 2
+  mvp_weeks_max: 10
+  validation_days_max: 30
+  capex: low
+  preferred_model: B2B2G
+  nationwide_required: false
+assets:
+  - Next.js
+  - TypeScript
+  - PostgreSQL
+  - GIS/GeoJSON
+  - public procurement documents
+  - LLM structured output
+budget:
+  research_compute:
+    amount: 60
+    currency: USD
+  market_validation:
+    amount: 300000
+    currency: JPY
+human_approval_required:
+  - external_contact
+  - customer_data_use
+  - pricing_or_contract
+  - regulated_claim
+assumptions:
+  - id: A-SAMPLE-01
+    classification: ASSUMPTION
+    text: "自治体直販より、既存の受託調査会社の方が30日以内に接触・試行しやすい"
+  - id: A-SAMPLE-02
+    classification: ASSUMPTION
+    text: "既存GISを置換せず、差分キュー・QA・成果品変換に限定すれば導入負担を下げられる"
