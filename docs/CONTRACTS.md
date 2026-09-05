@@ -71,6 +71,9 @@
 
 どの形態でも **状態機械・検証・冪等性・記録は `dfy` CLI が所有**する。オーケストレーターや executor は状態を直接書かない。
 
+- executor の `mode` は `executors.snapshot.yaml` に固定される Run 属性である。snapshot の claude-code が `mode: subagent` の Run に対して `dfy run auto` を実行した場合、claude-code Job に当たった時点で `EXECUTOR_UNAVAILABLE`（終了コード 6、reason `subagent_mode_requires_claude_code`）で停止し `/dfy-run` を案内する。`dfy run auto --headless-only` は claude-code 以外の Job だけを進め、残りが subagent Job のみになった時点で同じ終了コードで止まる。mode を変えたい場合は `dfy run fork`。
+- Claude Code の Bash ツールには実行時間上限があるため、`/dfy-run` から呼ぶ `dfy exec` は `--detach`（子プロセスをバックグラウンドで起動し即時終了。完了時に detached プロセス自身が `dfy complete` 相当の確定を行う）を使う。進行中 Job は `dfy next --json` の `in_flight` に現れる。
+
 ---
 
 ## 5. ディレクトリ配置
@@ -96,6 +99,8 @@ demand-foundry/
   prompts/<agent_key>/        # §8
   schemas/*.schema.json       # 公開 JSON Schema（§13）
   config/executors.example.yaml
+  config/executors.mock.yaml  # 全 llm Stage を mock にした受け入れ試験用設定
+  config/cost-table.example.yaml  # optional。headless + API key 利用時の USD 推計表（cost_table_version を持つ）
   design/v1.0.0/              # 旧設計（参照のみ）
   docs/                       # 本設計 v2.0.0
   tests/
@@ -155,12 +160,14 @@ runs/<run_id>/
   validation-plans.jsonl
   experiments/<experiment_id>/
     plan.json | events.jsonl | result.json
+  mvp-projects.jsonl            # MVP-NNN。dfy mvp create の出力
   approvals.jsonl
   predictions.jsonl             # prediction snapshots
   learning/                     # calibration snapshots、proposals
   research-tasks.jsonl
   stage-io/<stage_key>/<job_id>/
     request.json | request.md | output.raw.txt | response.json | repairs/<n>.json
+    exec/                       # headless executor の作業領域: system.md | prompt.txt | schema.json | cwd/
   FINAL.md                      # export 生成物（decisions.jsonl の転記）
   export/<export_id>/           # zip + manifest
   .lock                         # 同一 run の同時 CLI 実行防止（pid, started_at）
@@ -193,12 +200,13 @@ runs/<run_id>/
 | Red team review | `RT-NNN` | |
 | Decision | `D-S-NNN` | `D-S-001` |
 | Validation plan / Experiment | `V-NNN` / `EXP-NNN` | |
+| MVP project | `MVP-NNN` | |
 | Approval | `APR-NNN` | |
 | Research task | `RQ-NNN` | |
 | Journal seq | 整数、1 から単調増加 | |
 | Anchor | `ANCHOR-WEAK` / `ANCHOR-STRONG` | |
 
-- ID は run 内で一意。連番は journal の `id.allocated` で確定する。
+- ID は run 内で一意。連番は journal の `id.allocated` で確定する。`mock` executor が fixture の ID（例 `I-001`）をそのまま採用した場合は `id.allocated` に `hinted: true` を付ける。mock 以外の executor が出力に含めた ID ヒントは無視し、dfy が採番する。
 - `content_hash` は正規化 JSON（キーソート、UTF-8、改行なし）の sha256。表記は `sha256:<hex>`。
 - `idempotency_key = sha256(run_id | stage_key | entity_id | handler_version | input_hash)`。
 
@@ -306,7 +314,7 @@ prompts/<agent_key>/
 | `claude-code` | Claude Code CLI | `headless` | サブスク資格情報 または `ANTHROPIC_API_KEY` | `--json-schema` → `structured_output` | `--allowedTools WebSearch,WebFetch` | 同左 | `usage`, `total_cost_usd` | `--model` |
 | `codex` | Codex CLI（GPT） | headless のみ | ChatGPT プラン（`codex login`）または `CODEX_API_KEY` | `--output-schema` | executor 設定依存（既定 off） | なし | `turn.completed.usage` | `-m` |
 | `gemini-cli` | Gemini CLI | headless のみ | Google アカウント / AI Pro / Ultra（対話ログイン済み資格情報）または `GEMINI_API_KEY` | なし（JSON 抽出 + 検証） | あり（google_web_search） | あり | `stats` | `--model` |
-| `mock` | fixture | — | 不要 | fixture そのまま | 擬似 | 擬似 | fixture 値 | 記録のみ |
+| `mock` | fixture | `headless`（記録上。`dfy exec` が起動する） | 不要 | fixture そのまま | 擬似 | 擬似 | fixture 値 | 記録のみ |
 
 Capability 名: `structured_output`, `web_search`, `web_fetch`, `usage_report`, `model_pin`, `no_tools`（ツール完全無効化が可能）。Stage の `capabilities_required`（meta.yaml）を満たさない executor 割当は `dfy doctor` / `dfy run start` が `CAPABILITY_MISSING` で拒否する。
 
@@ -334,7 +342,7 @@ executors:
     model: gpt-5.5
     sandbox: read-only
     ephemeral: true
-    web_search: false
+    web_search: false              # MVP では true を VALIDATION_ERROR で拒否する（有効化 flag が未検証のため）
     capacity: { max_parallel: 2, max_requests_per_run: 300, cooldown_on_limit_s: 900 }
   gemini-cli:
     bin: gemini
@@ -344,12 +352,15 @@ executors:
   mock:
     fixtures: design/v1.0.0/runs/run-2026-09-04-01
 stages:
+  brief_compile:      { executor: claude-code, model: sonnet }
   signal_scout:       { executor: claude-code, model: opus }
   evidence_verify:    { executor: codex }
   problem_mine:       { executor: claude-code, model: sonnet }
   opportunity_map:    { executor: claude-code, model: sonnet }
   service_generate:   { executor: claude-code, model: sonnet }
   business_model:     { executor: codex }
+  novelty:            { executor: gemini-cli, model: flash, llm_assist: false }   # deterministic。llm_assist: true で novelty_analyst を追加実行
+  hard_gate:          { executor: claude-code, model: sonnet, llm_assist: false } # deterministic。llm_assist: true で hard_gate_explainer を追加実行
   referee_evidence:   { executor: codex }
   referee_commercial: { executor: claude-code, model: sonnet }
   referee_technical:  { executor: gemini-cli, model: pro }
@@ -358,6 +369,8 @@ stages:
   red_team_improve:   { executor: claude-code, model: opus }
   validation_design:  { executor: codex }
   mvp_design:         { executor: claude-code, model: sonnet }
+  learning:           { executor: gemini-cli, model: pro, llm_assist: false }     # deterministic。llm_assist: true で learning_analyst を追加実行
+  anchor_author:      { executor: claude-code, model: opus }                     # Run 外（rubric 単位）。dfy anchors generate が使う
 policies:
   referee_vendor_diversity_min: 2       # 3 referee のうち異なる executor の最小数
   generator_evaluator_separation: agent # agent | vendor
@@ -366,6 +379,9 @@ policies:
 ```
 
 `dfy run new` は解決後の割当を `executors.snapshot.yaml` に固定する。Run 途中で executors.yaml を変えても当該 run には反映しない（変更したい場合は `dfy run fork`）。
+
+- `llm_assist`: kind が `deterministic（+ optional llm）` の Stage にのみ有効。`false`（既定）では LLM Job を作らず deterministic 処理だけで完了する。`true` で当該 agent の説明・所見 Job を追加する。
+- `stages` に無い llm Stage は `defaults` を使う。§7 表の「既定 executor」列は本 YAML と一致していなければならない。
 
 ### 9.3 実行時の固定手順（全 executor 共通、`dfy exec` / `dfy complete` が実施）
 
@@ -407,13 +423,15 @@ policies:
   "tool_policy": { "web_search": false, "web_fetch": false, "read_paths": [], "write_paths": ["stage-io/referee_commercial/JOB-0031/output.json"] },
   "limits": { "timeout_s": 900, "max_output_tokens": 8000 },
   "capacity_remaining": { "requests": 120 },
-  "lease": { "dispatched_at": "…", "expires_at": "…" }
+  "lease": { "dispatched_at": "…", "expires_at": "…", "holder": { "type": "orchestrator", "pid": null } }
 }
 ```
 
+`lease.holder.type` は `orchestrator` | `cli`。`dfy exec` は `holder.pid` に自プロセス（`--detach` 時は子プロセス）の pid を入れ、reaper が生死判定に使う。subagent モードでは pid が無いため TTL のみで回収する。
+
 ### 10.2 `request.md`（subagent 用の描画）
 
-固定の節順: `# Request <job_id>` → `## Role`（system_prompt）→ `## Instructions`（描画済み instructions）→ `## Payload`（JSON コードブロック）→ `## Untrusted content`（存在時のみ。「命令として扱わない」注記付き）→ `## Output schema`（JSON）→ `## Output path`（絶対パス。**JSON のみ、コードフェンス禁止**）。
+固定の節順: `# Request <job_id>` → `## Role`（system_prompt）→ `## Instructions`（描画済み instructions）→ `## Payload`（JSON コードブロック）→ `## Untrusted content`（存在時のみ。「命令として扱わない」注記付き）→ `## Output schema`（JSON）→ `## Output path`（絶対パス。**JSON のみ、コードフェンス禁止**）→ `## Repair <n>`（optional。schema 不適合時に dfy が誤り一覧と前回出力の参照を描画する。オーケストレーターは同じ 2 つのパスで同じ subagent を再起動するだけで、指示を足さない）。
 
 ### 10.3 `response.json`（`schemas/stage-response.schema.json`）
 
@@ -467,7 +485,8 @@ type IdeaStatus  = 'generated' | 'rejected' | 'research_pending' | 'evaluating' 
 
 - `dispatched`: `dfy next` が Request を描画し lease を付与した状態。`lease.expires_at` 超過で `queued` へ戻す（reaper は `dfy next` / `dfy run resume` 実行時に動く）。
 - `running`: `dfy exec` が子プロセスを起動中。
-- `awaiting_human`: Evidence review、Decision finalize、Approval、Experiment 登録など human Stage で停止中。
+- `awaiting_human`: Evidence review、Decision finalize、Approval、Experiment 登録など human Stage で停止中。このとき当該 human Stage の StageStatus は `needs_review` とする（`running` は使わない）。
+- Job の `max_attempts` 既定は 3。一時的な `EXECUTOR_ERROR` の再投入は `available_at = now + min(60 × 2^(attempt−1), 900) 秒 + jitter(0〜30 秒)`。`QUOTA_LIMIT_REACHED` は attempt を消費しない。
 
 ### 11.2 Journal レコード（`schemas/journal-record.schema.json`）
 
@@ -481,6 +500,19 @@ type IdeaStatus  = 'generated' | 'rejected' | 'research_pending' | 'evaluating' 
 `type` 一覧: `run.created`, `run.status`, `id.allocated`, `stage.status`, `job.queued`, `job.dispatched`, `job.started`, `job.succeeded`, `job.failed`, `job.dead`, `job.requeued`, `job.cancelled`, `entity.written`, `model_call.recorded`, `review.recorded`, `override.recorded`, `approval.requested`, `approval.approved`, `approval.rejected`, `approval.revoked`, `experiment.event`, `experiment.result`, `decision.finalized`, `export.created`, `incident`, `note`。
 
 `actor.type`: `cli` | `orchestrator` | `human` | `executor` | `system`。人間操作は `--by <name>` を必須とし、`reason` を持つ。`hash = sha256(prev_hash + canonical(record without hash))`。`dfy verify` がチェーンを検証する。
+
+payload の最低限:
+
+| type | 必須 payload |
+|---|---|
+| `run.created` | `run_key`, `parent_run_id`(null 可), `snapshot_hashes` {brief, rubric, executors, prompts, anchors, constraints} |
+| `run.status` | `from`, `to`, `reason`（`quota` の場合は `executor`, `cooldown_s`, `available_at`。`budget` の場合は `scope`, `limit`） |
+| `stage.status` | `stage_key`, `from`, `to`, `metrics`(optional) |
+| `job.*` | `job_id`, `stage_key`, `attempt`。`job.requeued` は `reason` ∈ {`lease_expired`, `holder_dead`, `quota`, `manual`, `transient_error`} |
+| `id.allocated` | `kind`, `id`, `hinted`(bool) |
+| `entity.written` | `file`, `count`, `content_hashes[]` |
+| `model_call.recorded` | `call_id`, `job_id` |
+| `review.recorded` / `override.recorded` / `decision.finalized` / `approval.*` / `experiment.*` | 対象 ID、`by`, `reason`、payload hash（approval） |
 
 ---
 
@@ -497,14 +529,15 @@ type IdeaStatus  = 'generated' | 'rejected' | 'research_pending' | 'evaluating' 
 | `dfy run new` | Run 作成（draft）。snapshot 固定 | run |
 | `dfy run start` / `pause` / `resume` / `cancel` / `fork` / `status` / `list` | Run 操作 | run |
 | `dfy run auto` | headless ループ（next → exec → complete）。human Stage で停止 | run |
-| `dfy next` | 実行可能 Job を lease し Request を描画。`--max N` `--json` | job |
-| `dfy exec` | Job を headless executor で実行し complete まで行う | job |
+| `dfy next` | 実行可能 Job を lease し Request を描画。`--max N` `--json` `--lease-ttl` | job |
+| `dfy exec` | Job を headless executor で実行し complete まで行う。`--detach` で背景実行 | job |
 | `dfy complete` | subagent 出力を検証・確定。`--output` `--usage` `--model` | job |
 | `dfy fail` / `dfy requeue` | Job の失敗記録・再投入 | job |
 | `dfy source add` / `fetch` / `upload` / `list` | Source 登録と snapshot 取得（deterministic） | evidence |
 | `dfy evidence list` / `review` | Evidence review（approve / downgrade / reject / split / conflict） | evidence |
 | `dfy claim add` / `link` | Claim 作成と support/refute link | evidence |
 | `dfy research list` / `resolve` | Research task | evidence |
+| `dfy signal review` | Signal の approve / reject / merge（P1。MVP は閲覧のみ） | evidence |
 | `dfy gate run` / `show` / `override` | Hard Gate | evaluation |
 | `dfy novelty compute` / `review` | Novelty | evaluation |
 | `dfy eval aggregate` / `show` | median/MAD 集計、disagreement、anchor 観測 | evaluation |
@@ -513,13 +546,16 @@ type IdeaStatus  = 'generated' | 'rejected' | 'research_pending' | 'evaluating' 
 | `dfy decision finalize` | 人間による確定 | human |
 | `dfy approval request` / `approve` / `reject` / `revoke` / `list` | 承認 | human |
 | `dfy experiment start` / `event` / `complete` / `show` | 検証実験と行動イベント | human |
-| `dfy mvp create` | Validation gate を満たす場合のみ MVP project 作成 | run |
+| `dfy mvp create` / `update` | Validation gate を満たす場合のみ MVP project 作成。`update` は milestone / pause / kill（P1） | run |
 | `dfy learning snapshot` / `calibration` / `propose` | 学習 | learning |
 | `dfy export` | run package 生成（md / jsonl / json / zip）+ manifest | export |
 | `dfy verify` | hash chain、manifest、schema、projection 整合の検証 | export |
 | `dfy state` | STATE.md 再生成 | projection |
 | `dfy show` | エンティティ表示（`--json`） | projection |
 | `dfy report` | 静的 HTML レポート生成（P1） | projection |
+| `dfy import` | 予約（Phase 3: run ディレクトリ → PostgreSQL の一方向 import）。MVP では実装しない | reserved |
+
+グローバル引数（全コマンド共通）: `--json`、`--run <run_id>`（省略時は `dfy.config.yaml` の current run）、`--by <name>`（human 操作で必須）、`--reason <text>`、`--actor orchestrator`（`/dfy-run` が付ける。journal の `actor.type=orchestrator` になり、human 判断系コマンド（review / override / finalize / approval / experiment）はこの actor を拒否する）、`--dry-run`、`--yes`。
 
 ### 12.1 終了コード
 
@@ -527,8 +563,8 @@ type IdeaStatus  = 'generated' | 'rejected' | 'research_pending' | 'evaluating' 
 |---:|---|
 | 0 | 成功 |
 | 1 | 一般エラー |
-| 2 | 引数・スキーマ検証エラー（`VALIDATION_ERROR`） |
-| 3 | 状態遷移違反（`INVALID_STATE_TRANSITION`） |
+| 2 | 引数・スキーマ検証エラー（`VALIDATION_ERROR` / `POLICY_VIOLATION`） |
+| 3 | 状態遷移違反（`INVALID_STATE_TRANSITION` / `LEASE_EXPIRED` / `IDEMPOTENCY_CONFLICT`） |
 | 4 | 承認必要（`APPROVAL_REQUIRED`） |
 | 5 | 利用枠・予算停止（`QUOTA_LIMIT_REACHED` / `BUDGET_LIMIT_REACHED`） |
 | 6 | executor エラー（`EXECUTOR_ERROR` / `EXECUTOR_UNAVAILABLE` / `CAPABILITY_MISSING`） |
@@ -539,7 +575,7 @@ type IdeaStatus  = 'generated' | 'rejected' | 'research_pending' | 'evaluating' 
 
 ### 12.2 エラーコード（安定文字列）
 
-`VALIDATION_ERROR`, `NOT_FOUND`, `INVALID_STATE_TRANSITION`, `APPROVAL_REQUIRED`, `EVIDENCE_REQUIRED`, `HARD_GATE_BLOCKED`, `QUOTA_LIMIT_REACHED`, `BUDGET_LIMIT_REACHED`, `EXECUTOR_ERROR`, `EXECUTOR_UNAVAILABLE`, `CAPABILITY_MISSING`, `SCHEMA_INVALID`, `LEASE_EXPIRED`, `IDEMPOTENCY_CONFLICT`, `LOCK_HELD`, `FORK_REQUIRED`, `PROMPT_INJECTION_SUSPECTED`, `INVARIANT_VIOLATION`, `VALIDATION_THRESHOLD_NOT_MET`, `VERIFY_FAILED`。
+`VALIDATION_ERROR`, `POLICY_VIOLATION`（`referee_vendor_diversity_min` 等の policies 違反）, `NOT_FOUND`, `INVALID_STATE_TRANSITION`, `APPROVAL_REQUIRED`, `EVIDENCE_REQUIRED`, `HARD_GATE_BLOCKED`, `QUOTA_LIMIT_REACHED`, `BUDGET_LIMIT_REACHED`, `EXECUTOR_ERROR`, `EXECUTOR_UNAVAILABLE`, `CAPABILITY_MISSING`, `SCHEMA_INVALID`, `LEASE_EXPIRED`, `IDEMPOTENCY_CONFLICT`, `LOCK_HELD`, `FORK_REQUIRED`, `PROMPT_INJECTION_SUSPECTED`, `INVARIANT_VIOLATION`, `VALIDATION_THRESHOLD_NOT_MET`, `VERIFY_FAILED`, `AWAITING_HUMAN`。
 
 `--json` 指定時の出力は常に `{ "data": …, "meta": { "run_id", "command", "dfy_version" } }` または `{ "error": { "code", "message", "details", "retryable", "action" } }`。
 
@@ -581,7 +617,7 @@ type IdeaStatus  = 'generated' | 'rejected' | 'research_pending' | 'evaluating' 
 | `capacity.max_parallel` | executor ごとの同時実行数 |
 | `capacity.cooldown_on_limit_s` | 利用枠エラー後の待機秒 |
 | `budget.requests` | Run 全体・Stage 別のリクエスト上限（brief で設定） |
-| `budget.usd`（optional） | cost table がある executor（headless API key 利用時）だけの推計上限 |
+| `budget.usd`（optional） | cost table がある executor（headless API key 利用時）だけの推計上限。cost table は `config/cost-table.yaml`（`cost_table_version` を持つ）。未設定なら USD 推計は `null` |
 | `quota_paused` | 利用枠エラーで停止した Run 状態。cooldown 後 `dfy run resume` で再開 |
 | `budget_paused` | リクエスト数または USD 推計が上限に達した Run 状態 |
 
@@ -647,5 +683,7 @@ v2 でも**外部行為の実行機能は実装しない**（D-015 維持）。�
 - Learning: n < 30 は記述統計のみ、30〜99 は提案のみ、≥ 100 で shadow
 - Anchors: ANCHOR-STRONG − ANCHOR-WEAK の総合点差が **3.0 未満**なら referee run を `miscalibrated` として警告（`policies.anchors: observe`）、`apply` 時は線形正規化
 - Referee ベンダー分散: 3 referee のうち **異なる executor が 2 以上**（`referee_vendor_diversity_min`）
-- Lease TTL: 30 分（`dfy next --lease-ttl` で変更可）
-- Schema repair: 最大 2 回
+- Lease TTL: 30 分（`dfy next --lease-ttl` で変更可。常に `limits.timeout_s` 以上）
+- Job `max_attempts`: 3。backoff は §11.1
+- Schema repair: 最大 2 回。同一 `agent_key` で 3 回連続 `SCHEMA_INVALID` なら当該 Stage を `blocked`
+- Referee batch: 1 Job あたり packet 4 件 + anchors 2 件（`referee_batch_size`。所有は EVALUATION）

@@ -103,7 +103,7 @@ flowchart TD
 規則:
 
 - 層 2 のモジュールは `WriteSet`（追記するエンティティ行 + journal payload）を返し、**コミットは `cli` が `store.commit()` で行う**。層 2 が直接 `fs` を呼ぶのは外部 I/O（ネットワーク、子プロセス、fixture）だけである。
-- `executors` の契約は 1 つ: `run(request: StageRequest, ctx): Promise<ExecutorRawResult>`（raw text、`usage`、`model_reported`、`session_id`、終了コード、正規化 error code）。subagent モードでは `run()` を呼ばず、`dfy next` が描画し `dfy complete` が `output_path` を読む。詳細は `docs/EXECUTORS.md`。
+- `executors` の契約は 1 つ: `execute(request: StageRequest, ctx): Promise<ExecutorRawResult>`（raw text、`usage`、`model_reported`、`session_id`、終了コード、正規化 error code）。subagent モードでは `execute()` を呼ばず、`dfy next` が描画し `dfy complete` が `output_path` を読む。詳細は `docs/EXECUTORS.md`。
 - Stage 固有のロジック（Gate 規則、集計式、portfolio 制約）は `evaluation` 等に置き、`cli` はそれを呼ぶだけにする。数式の正本は `docs/EVALUATION.md`。
 
 ## 4. データの正
